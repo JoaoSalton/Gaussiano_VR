@@ -1,14 +1,15 @@
-
 import * as THREE from "./lib/three.module.js";
 import * as GaussianSplats3D from "./lib/gaussian-splats-3d.module.js";
 import { VRButton } from "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/webxr/VRButton.js";
 
 alert("main carregou");
 
+
 const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
 
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(
     window.innerWidth,
     window.innerHeight
@@ -23,6 +24,8 @@ document.body.appendChild(
 
 
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x222222);
+
 
 const camera = new THREE.PerspectiveCamera(
     60,
@@ -32,8 +35,9 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 
-// Ajuste inicial da câmera (pode mudar depois)
-camera.position.set(0, 0, 1);
+// posição inicial
+camera.position.set(0, 0, 2);
+camera.lookAt(0, 0, 0);
 
 
 const viewer = new GaussianSplats3D.Viewer({
@@ -50,6 +54,28 @@ console.log("splat carregado");
 
 
 renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
+
+    viewer.update();
+
+    renderer.render(
+        scene,
+        camera
+    );
+
 });
 
+
+window.addEventListener("resize", () => {
+
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+});
