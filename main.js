@@ -52,4 +52,4 @@ console.log("splat carregado");
 renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
 });
-```
+
