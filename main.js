@@ -34,9 +34,7 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-
-// posição inicial
-camera.position.set(0, 0, 2);
+camera.position.set(0, 2, 5);
 camera.lookAt(0, 0, 0);
 
 
@@ -54,10 +52,6 @@ console.log("splat carregado");
 
 
 renderer.setAnimationLoop(() => {
-
-    viewer.update();
-
-renderer.setAnimationLoop(() => {
     viewer.update();
 });
 
@@ -65,8 +59,7 @@ renderer.setAnimationLoop(() => {
 window.addEventListener("resize", () => {
 
     camera.aspect =
-        window.innerWidth /
-        window.innerHeight;
+        window.innerWidth / window.innerHeight;
 
     camera.updateProjectionMatrix();
 
