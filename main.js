@@ -35,7 +35,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 camera.position.set(0, 0, 0);
-camera.lookAt(0, 0, 0);
+
 
 
 const viewer = new GaussianSplats3D.Viewer({
