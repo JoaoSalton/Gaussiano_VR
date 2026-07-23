@@ -1,4 +1,4 @@
-```javascript
+
 import * as THREE from "./lib/three.module.js";
 import * as GaussianSplats3D from "./lib/gaussian-splats-3d.module.js";
 import { VRButton } from "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/webxr/VRButton.js";
