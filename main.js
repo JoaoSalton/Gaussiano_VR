@@ -40,7 +40,7 @@ const camera = new THREE.PerspectiveCamera(
 
 
 // posição dos olhos
-camera.position.set(0, 1.6, 2);
+camera.position.set(0, 0, 0);
 
 
 
