@@ -48,9 +48,6 @@ const viewer = new GaussianSplats3D.Viewer({
 
 
 await viewer.addSplatScene("./modelo.ksplat");
-viewer.getSplatScene().then(() => {
-    console.log("cena pronta");
-});
 
 
 
