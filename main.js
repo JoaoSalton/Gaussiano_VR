@@ -53,6 +53,7 @@ console.log("splat carregado");
 
 renderer.setAnimationLoop(() => {
     viewer.update();
+    viewer.render();
 });
 
 
