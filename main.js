@@ -57,11 +57,8 @@ renderer.setAnimationLoop(() => {
 
     viewer.update();
 
-    renderer.render(
-        scene,
-        camera
-    );
-
+renderer.setAnimationLoop(() => {
+    viewer.update();
 });
 
 
