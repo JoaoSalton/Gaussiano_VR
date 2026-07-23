@@ -1,7 +1,7 @@
 import * as THREE from "./lib/three.module.js";
 import { GaussianSplats3D } from "./lib/gaussian-splats-3d.module.js";
 import { VRButton } from "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/webxr/VRButton.js";
-
+alert("main carregou");
 
 const renderer = new THREE.WebGLRenderer({
     antialias:true
