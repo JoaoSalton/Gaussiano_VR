@@ -33,8 +33,11 @@ const camera = new THREE.PerspectiveCamera(
 const viewer = new GaussianSplats3D.Viewer({
     renderer,
     camera,
-    scene
+    scene,
+    sharedMemoryForWorkers: false
 });
+
+await viewer.addSplatScene("./modelo.ksplat");
 
 
 await viewer.addSplatScene(
