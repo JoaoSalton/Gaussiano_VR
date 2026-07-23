@@ -34,8 +34,8 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-camera.position.set(0, 2, 5);
-camera.lookAt(0, 0, 0);
+camera.position.set(0, 0, 1);
+
 
 
 const viewer = new GaussianSplats3D.Viewer({
@@ -46,7 +46,11 @@ const viewer = new GaussianSplats3D.Viewer({
 });
 
 
-await viewer.addSplatScene("./modelo.ksplat");
+await viewer.addSplatScene("./modelo.ksplat", {
+    showLoadingUI: false
+});
+
+viewer.start();
 
 console.log("splat carregado");
 
