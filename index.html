@@ -1,16 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<meta charset="utf-8">
-<title>Gaussian VR</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tour Virtual VR</title>
 <style>
-body { margin:0; overflow:hidden; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #222222;
+    width: 100%;
+    height: 100%;
+  }
+  canvas {
+    display: block;
+  }
 </style>
+
+<!-- Import map: resolve o specifier "three" usado internamente
+     pela lib gaussian-splats-3d e pelos addons do three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./lib/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
+  }
+}
+</script>
 </head>
-
 <body>
-
-<script type="module" src="./main.js"></script>
-
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
