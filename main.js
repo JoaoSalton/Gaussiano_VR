@@ -2,6 +2,7 @@ import * as THREE from "./lib/three.module.js";
 import * as GaussianSplats3D from "./lib/gaussian-splats-3d.module.js";
 import { VRButton } from "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/webxr/VRButton.js";
 
+
 alert("main carregou");
 
 
@@ -17,14 +18,17 @@ renderer.setSize(
 
 renderer.xr.enabled = true;
 
+
 document.body.appendChild(renderer.domElement);
 document.body.appendChild(
     VRButton.createButton(renderer)
 );
 
 
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222);
+
 
 
 const camera = new THREE.PerspectiveCamera(
@@ -34,7 +38,9 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-camera.position.set(0, 0, -1);
+
+// posição dos olhos
+camera.position.set(0, 1.6, 2);
 
 
 
@@ -46,26 +52,127 @@ const viewer = new GaussianSplats3D.Viewer({
 });
 
 
+
 await viewer.addSplatScene("./modelo.ksplat", {
-    showLoadingUI: false
+    showLoadingUI:false
 });
 
-viewer.start();
 
 console.log("splat carregado");
 
 
-renderer.setAnimationLoop(() => {
-    viewer.update();
+
+// ==========================
+// CONTROLE TECLADO
+// ==========================
+
+const keys = {};
+
+window.addEventListener("keydown", e=>{
+    keys[e.key.toLowerCase()] = true;
 });
 
 
-window.addEventListener("resize", () => {
+window.addEventListener("keyup", e=>{
+    keys[e.key.toLowerCase()] = false;
+});
+
+
+
+function moveCamera(){
+
+    const speed = 0.05;
+
+
+    const forward = new THREE.Vector3();
+
+    camera.getWorldDirection(forward);
+
+    // não deixa andar para cima/baixo olhando
+    forward.y = 0;
+
+    forward.normalize();
+
+
+
+    const right = new THREE.Vector3();
+
+    right.crossVectors(
+        forward,
+        camera.up
+    );
+
+    right.normalize();
+
+
+
+    if(keys["w"]){
+        camera.position.add(
+            forward.clone().multiplyScalar(speed)
+        );
+    }
+
+
+    if(keys["s"]){
+        camera.position.add(
+            forward.clone().multiplyScalar(-speed)
+        );
+    }
+
+
+    if(keys["a"]){
+        camera.position.add(
+            right.clone().multiplyScalar(-speed)
+        );
+    }
+
+
+    if(keys["d"]){
+        camera.position.add(
+            right.clone().multiplyScalar(speed)
+        );
+    }
+
+
+    if(keys["q"]){
+        camera.position.y += speed;
+    }
+
+
+    if(keys["e"]){
+        camera.position.y -= speed;
+    }
+
+}
+
+
+
+
+// ==========================
+// LOOP
+// ==========================
+
+renderer.setAnimationLoop(()=>{
+
+    moveCamera();
+
+    viewer.update();
+
+});
+
+
+
+
+
+window.addEventListener("resize",()=>{
 
     camera.aspect =
-        window.innerWidth / window.innerHeight;
+        window.innerWidth /
+        window.innerHeight;
+
 
     camera.updateProjectionMatrix();
+
 
     renderer.setSize(
         window.innerWidth,
