@@ -25,9 +25,9 @@ const dolly = new THREE.Group();
 dolly.add(camera);
 scene.add(dolly);
 
-dolly.position.set(0, 1.6, 5);
+dolly.position.set(0, 1.6, 3);
 camera.position.set(0, 0, 1);
-camera.rotation.set(0, 0, 0); // garante que não veio nenhuma rotação residual
+camera.rotation.set(0, 0, 90); // garante que não veio nenhuma rotação residual
 
 // ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
