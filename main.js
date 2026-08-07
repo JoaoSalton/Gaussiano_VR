@@ -27,6 +27,7 @@ scene.add(dolly);
 
 dolly.position.set(0, 1.6, 5);
 camera.position.set(0, 0, 1);
+camera.rotation.set(0, 0, 0); // garante que não veio nenhuma rotação residual
 
 // ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
@@ -39,18 +40,25 @@ const viewer = new GaussianSplats3D.Viewer({
 await viewer.addSplatScene("./modelo.ksplat");
 console.log("splat carregado");
 
+// DEBUG: se a cena estiver rotacionada, isso vai mostrar
+// pegue o objeto retornado pelo viewer (se disponível) e logue sua rotação/matriz
+console.log("scene rotation:", scene.rotation);
+
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 
-// --- CORREÇÃO: usa a posição MUNDIAL da câmera para calcular o target ---
-const camWorldPos = new THREE.Vector3();
-camera.getWorldPosition(camWorldPos);
-orbitControls.target.copy(camWorldPos).add(new THREE.Vector3(0, 0, -1));
-
+// target local em relação ao dolly (camera é filha do dolly)
+orbitControls.target.set(0, 0, 0); // = camera.position + (0,0,-1) local, level
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.08;
 orbitControls.rotateSpeed = 0.5;
 orbitControls.enableZoom = false;
 orbitControls.enablePan = false;
+orbitControls.update();
+
+// força orientação inicial explicitamente, sem depender do update automático
+camera.lookAt(new THREE.Vector3(0, camera.position.y, -1000));
+
+console.log("cam rotation após setup:", camera.rotation);
 
 const keys = {};
 window.addEventListener("keydown", (e) => (keys[e.code] = true));
