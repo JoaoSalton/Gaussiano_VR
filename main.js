@@ -27,7 +27,7 @@ scene.add(dolly);
 
 
 dolly.position.set(0, 1.6, 5);
-camera.position.set(0, 0, 90);
+camera.position.set(0, 0, 1);
 
 // ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
