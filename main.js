@@ -26,7 +26,7 @@ dolly.add(camera);
 scene.add(dolly);
 
 
-dolly.position.set(0, 1.6, 5);
+dolly.position.set(0, 1.2, 4);
 camera.position.set(0, 0, 1);
 
 // ---------- CARREGAR O SPLAT ----------
@@ -43,7 +43,7 @@ console.log("splat carregado");
 
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
-orbitControls.target.set(0, 0, -1).add(camera.position);
+orbitControls.target.set(0, 0, 0).add(camera.position);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.08;
 orbitControls.rotateSpeed = 0.5;
