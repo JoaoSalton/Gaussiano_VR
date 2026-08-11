@@ -25,9 +25,9 @@ const dolly = new THREE.Group();
 dolly.add(camera);
 scene.add(dolly);
 
-dolly.position.set(0, 1.6, 3);
+dolly.position.set(0, 0, 3);
 camera.position.set(0, 0, 2);
-camera.rotation.set(10, 0, 150); // garante que não veio nenhuma rotação residual
+
 
 // ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
@@ -47,7 +47,7 @@ console.log("scene rotation:", scene.rotation);
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 
 // target local em relação ao dolly (camera é filha do dolly)
-orbitControls.target.set(0, 0, -5); // = camera.position + (0,0,-1) local, level
+orbitControls.target.set(0, 0, -1); // = camera.position + (0,0,-1) local, level
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.08;
 orbitControls.rotateSpeed = 0.5;
