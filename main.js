@@ -26,7 +26,7 @@ dolly.add(camera);
 scene.add(dolly);
 
 dolly.position.set(0, 0, 0);
-camera.position.set(0, 0, 0.5);
+camera.position.set(0, 0, -0.5);
 
 
 // ---------- CARREGAR O SPLAT ----------
