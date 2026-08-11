@@ -15,7 +15,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222);
 
 const camera = new THREE.PerspectiveCamera(
-    60,
+    90,
     window.innerWidth / window.innerHeight,
     0.01,
     1000
@@ -25,9 +25,9 @@ const dolly = new THREE.Group();
 dolly.add(camera);
 scene.add(dolly);
 
-dolly.position.set(0, 0, 0);
-camera.position.set(0, 0, -0.5);
-
+dolly.position.set(4, -10, 4);
+camera.position.set(0, 0, 0);
+camera.rotation.set(0, 0, 0); // garante que não veio nenhuma rotação residual
 
 // ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
@@ -40,17 +40,15 @@ const viewer = new GaussianSplats3D.Viewer({
 await viewer.addSplatScene("./modelo.ksplat");
 console.log("splat carregado");
 
-// DEBUG: se a cena estiver rotacionada, isso vai mostrar
-// pegue o objeto retornado pelo viewer (se disponível) e logue sua rotação/matriz
 console.log("scene rotation:", scene.rotation);
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 
 // target local em relação ao dolly (camera é filha do dolly)
-orbitControls.target.set(0, 1, 1); // = camera.position + (0,0,-1) local, level
+orbitControls.target.set(5, 45, -8);
 orbitControls.enableDamping = true;
-orbitControls.dampingFactor = 0.08;
-orbitControls.rotateSpeed = 0.5;
+orbitControls.dampingFactor = 0.1;
+orbitControls.rotateSpeed = 0.1;
 orbitControls.enableZoom = false;
 orbitControls.enablePan = false;
 orbitControls.update();
@@ -60,32 +58,67 @@ camera.lookAt(new THREE.Vector3(0, camera.position.y, -1000));
 
 console.log("cam rotation após setup:", camera.rotation);
 
+// ---------- MOVIMENTAÇÃO POR TECLADO (DESKTOP) ----------
 const keys = {};
 window.addEventListener("keydown", (e) => (keys[e.code] = true));
 window.addEventListener("keyup", (e) => (keys[e.code] = false));
+// evita que perder o foco da janela "trave" uma tecla pressionada
+window.addEventListener("blur", () => {
+    for (const k in keys) keys[k] = false;
+});
 
-const moveSpeed = 2.5;
+const BASE_SPEED = 1.0;      // m/s andando
+const SPRINT_SPEED = 1.5;    // m/s correndo (Shift)
+const VERTICAL_SPEED = 1.0;  // m/s subindo/descendo (Q/E ou Space/Ctrl)
+const ACCEL = 15;            // quão rápido atinge a velocidade alvo
+const DAMPING = 3;          // quão rápido freia ao soltar a tecla
+
+const velocity = new THREE.Vector3();      // velocidade atual (world space)
+const desiredVelocity = new THREE.Vector3();
 const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
+const worldUp = new THREE.Vector3(0, 1, 0);
 
 function updateDesktopMovement(delta) {
     if (renderer.xr.isPresenting) return;
+
     camera.getWorldDirection(forward);
     forward.y = 0;
     forward.normalize();
     right.crossVectors(forward, camera.up).normalize();
-    const move = new THREE.Vector3();
-    if (keys["KeyW"]) move.add(forward);
-    if (keys["KeyS"]) move.sub(forward);
-    if (keys["KeyD"]) move.add(right);
-    if (keys["KeyA"]) move.sub(right);
-    if (move.lengthSq() > 0) {
-        move.normalize().multiplyScalar(moveSpeed * delta);
+
+    const currentSpeed = keys["ShiftLeft"] || keys["ShiftRight"] ? SPRINT_SPEED : BASE_SPEED;
+
+    desiredVelocity.set(0, 0, 0);
+    if (keys["KeyW"] || keys["ArrowUp"]) desiredVelocity.add(forward);
+    if (keys["KeyS"] || keys["ArrowDown"]) desiredVelocity.sub(forward);
+    if (keys["KeyD"] || keys["ArrowRight"]) desiredVelocity.add(right);
+    if (keys["KeyA"] || keys["ArrowLeft"]) desiredVelocity.sub(right);
+
+    if (desiredVelocity.lengthSq() > 0) {
+        desiredVelocity.normalize().multiplyScalar(currentSpeed);
+    }
+
+    // sobe/desce — eixo mundial, independente da rotação da câmera
+    let verticalInput = 0;
+    if (keys["KeyE"] || keys["Space"]) verticalInput += 1;
+    if (keys["KeyQ"] || keys["ControlLeft"]) verticalInput -= 1;
+    desiredVelocity.addScaledVector(worldUp, verticalInput * VERTICAL_SPEED);
+
+    // suaviza a transição de velocidade (aceleração/frenagem)
+    const rate = desiredVelocity.lengthSq() > 0 ? ACCEL : DAMPING;
+    velocity.lerp(desiredVelocity, 1 - Math.exp(-rate * delta));
+
+    if (velocity.lengthSq() > 0.0001) {
+        const move = velocity.clone().multiplyScalar(delta);
         camera.position.add(move);
         orbitControls.target.add(move);
+    } else {
+        velocity.set(0, 0, 0);
     }
 }
 
+// ---------- MOVIMENTAÇÃO EM VR (THUMBSTICK) ----------
 const vrMoveSpeed = 1.5;
 const tmpDir = new THREE.Vector3();
 const tmpRight = new THREE.Vector3();
