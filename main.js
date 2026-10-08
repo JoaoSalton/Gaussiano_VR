@@ -3,7 +3,10 @@ import * as GaussianSplats3D from "./lib/gaussian-splats-3d.module.js";
 import { VRButton } from "three/addons/webxr/VRButton.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-// ---------- SETUP BÁSICO ----------
+const MODEL_ROTATION_Z_DEG = 0;
+
+const CAMERA_START = { x: 0, y: 5, z: 2 };
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -15,7 +18,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x222222);
 
 const camera = new THREE.PerspectiveCamera(
-    90,
+    -90,
     window.innerWidth / window.innerHeight,
     0.01,
     1000
@@ -25,11 +28,10 @@ const dolly = new THREE.Group();
 dolly.add(camera);
 scene.add(dolly);
 
-dolly.position.set(4, -10, 4);
-camera.position.set(0, 0, 0);
-camera.rotation.set(0, 0, 0); // garante que não veio nenhuma rotação residual
+dolly.position.set(0, 0, 0);
+camera.position.set(CAMERA_START.x, CAMERA_START.y, CAMERA_START.z);
+camera.rotation.set(0, 0, 0);
 
-// ---------- CARREGAR O SPLAT ----------
 const viewer = new GaussianSplats3D.Viewer({
     renderer,
     camera,
@@ -37,15 +39,20 @@ const viewer = new GaussianSplats3D.Viewer({
     useBuiltInControls: false,
     sharedMemoryForWorkers: false
 });
-await viewer.addSplatScene("./modelo.ksplat");
-console.log("splat carregado");
 
-console.log("scene rotation:", scene.rotation);
+const modelQuat = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 0, 0),
+    THREE.MathUtils.degToRad(MODEL_ROTATION_Z_DEG)
+);
+
+await viewer.addSplatScene("./modelo.ksplat", {
+    rotation: modelQuat.toArray()
+});
+console.log("splat carregado");
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 
-// target local em relação ao dolly (camera é filha do dolly)
-orbitControls.target.set(5, 45, -8);
+orbitControls.target.set(CAMERA_START.x, CAMERA_START.y - 1, CAMERA_START.z);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.1;
 orbitControls.rotateSpeed = 0.1;
@@ -53,27 +60,22 @@ orbitControls.enableZoom = false;
 orbitControls.enablePan = false;
 orbitControls.update();
 
-// força orientação inicial explicitamente, sem depender do update automático
 camera.lookAt(new THREE.Vector3(0, camera.position.y, -1000));
 
-console.log("cam rotation após setup:", camera.rotation);
-
-// ---------- MOVIMENTAÇÃO POR TECLADO (DESKTOP) ----------
 const keys = {};
 window.addEventListener("keydown", (e) => (keys[e.code] = true));
 window.addEventListener("keyup", (e) => (keys[e.code] = false));
-// evita que perder o foco da janela "trave" uma tecla pressionada
 window.addEventListener("blur", () => {
     for (const k in keys) keys[k] = false;
 });
 
-const BASE_SPEED = 1.0;      // m/s andando
-const SPRINT_SPEED = 1.5;    // m/s correndo (Shift)
-const VERTICAL_SPEED = 1.0;  // m/s subindo/descendo (Q/E ou Space/Ctrl)
-const ACCEL = 15;            // quão rápido atinge a velocidade alvo
-const DAMPING = 3;          // quão rápido freia ao soltar a tecla
+const BASE_SPEED = 1.0;
+const SPRINT_SPEED = 1.5;
+const VERTICAL_SPEED = 1.0;
+const ACCEL = 15;
+const DAMPING = 3;
 
-const velocity = new THREE.Vector3();      // velocidade atual (world space)
+const velocity = new THREE.Vector3();
 const desiredVelocity = new THREE.Vector3();
 const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
@@ -90,22 +92,20 @@ function updateDesktopMovement(delta) {
     const currentSpeed = keys["ShiftLeft"] || keys["ShiftRight"] ? SPRINT_SPEED : BASE_SPEED;
 
     desiredVelocity.set(0, 0, 0);
-    if (keys["KeyW"] || keys["ArrowUp"]) desiredVelocity.add(forward);
-    if (keys["KeyS"] || keys["ArrowDown"]) desiredVelocity.sub(forward);
-    if (keys["KeyD"] || keys["ArrowRight"]) desiredVelocity.add(right);
-    if (keys["KeyA"] || keys["ArrowLeft"]) desiredVelocity.sub(right);
+    if (keys["KeyW"] || keys["ArrowUp"]) desiredVelocity.sub(forward);
+    if (keys["KeyS"] || keys["ArrowDown"]) desiredVelocity.add(forward);
+    if (keys["KeyD"] || keys["ArrowRight"]) desiredVelocity.sub(right);
+    if (keys["KeyA"] || keys["ArrowLeft"]) desiredVelocity.add(right);
 
     if (desiredVelocity.lengthSq() > 0) {
         desiredVelocity.normalize().multiplyScalar(currentSpeed);
     }
 
-    // sobe/desce — eixo mundial, independente da rotação da câmera
     let verticalInput = 0;
     if (keys["KeyE"] || keys["Space"]) verticalInput += 1;
     if (keys["KeyQ"] || keys["ControlLeft"]) verticalInput -= 1;
     desiredVelocity.addScaledVector(worldUp, verticalInput * VERTICAL_SPEED);
 
-    // suaviza a transição de velocidade (aceleração/frenagem)
     const rate = desiredVelocity.lengthSq() > 0 ? ACCEL : DAMPING;
     velocity.lerp(desiredVelocity, 1 - Math.exp(-rate * delta));
 
@@ -118,7 +118,6 @@ function updateDesktopMovement(delta) {
     }
 }
 
-// ---------- MOVIMENTAÇÃO EM VR (THUMBSTICK) ----------
 const vrMoveSpeed = 1.5;
 const tmpDir = new THREE.Vector3();
 const tmpRight = new THREE.Vector3();
@@ -145,7 +144,6 @@ function updateVRMovement(delta) {
 renderer.xr.addEventListener("sessionstart", () => (orbitControls.enabled = false));
 renderer.xr.addEventListener("sessionend", () => (orbitControls.enabled = true));
 
-// ---------- LOOP PRINCIPAL ----------
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
     const delta = clock.getDelta();
@@ -156,7 +154,6 @@ renderer.setAnimationLoop(() => {
     viewer.render();
 });
 
-// ---------- RESIZE ----------
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
