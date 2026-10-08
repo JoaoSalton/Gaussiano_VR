@@ -50,6 +50,19 @@ await viewer.addSplatScene("./modelo.ksplat", {
 });
 console.log("splat carregado");
 
+const help = document.createElement("div");
+help.style.cssText =
+    "position:fixed;left:16px;bottom:16px;padding:12px 16px;" +
+    "background:rgba(0,0,0,0.55);color:#fff;font:14px/1.7 system-ui,sans-serif;" +
+    "border-radius:10px;pointer-events:none;z-index:10;user-select:none";
+help.innerHTML =
+    "<strong>Controles</strong><br>" +
+    "W A S D &mdash; mover<br>" +
+    "Espa\u00e7o &mdash; zoom out<br>" +
+    "Ctrl esquerdo &mdash; zoom in<br>" +
+    "Mouse &mdash; girar";
+document.body.appendChild(help);
+
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 
 orbitControls.target.set(CAMERA_START.x, CAMERA_START.y - 1, CAMERA_START.z);
@@ -141,8 +154,14 @@ function updateVRMovement(delta) {
     }
 }
 
-renderer.xr.addEventListener("sessionstart", () => (orbitControls.enabled = false));
-renderer.xr.addEventListener("sessionend", () => (orbitControls.enabled = true));
+renderer.xr.addEventListener("sessionstart", () => {
+    orbitControls.enabled = false;
+    help.style.display = "none";
+});
+renderer.xr.addEventListener("sessionend", () => {
+    orbitControls.enabled = true;
+    help.style.display = "block";
+});
 
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
